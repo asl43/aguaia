@@ -146,6 +146,10 @@
             gap: 10px;
             margin-top: 20px;
         }
+        
+        .btn-group.center {
+            justify-content: center;
+        }
 
         .btn {
             padding: 12px 25px;
@@ -298,7 +302,55 @@
         .alert-info { background: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
         .alert-warning { background: #fff3cd; color: #856404; border-color: #ffeeba; }
         .alert-danger { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        /* Recomendações */
+        .recommendation-card {
+            background: #f0f0f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none; /* Inicia oculto */
+        }
+
+        .recommendation-item {
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+        }
         
+        /* OCR */
+        #ocr-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        #ocr-preview {
+            max-width: 100%;
+            height: auto;
+            max-height: 400px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        
+        /* Gráfico */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -312,6 +364,23 @@
         <div id="alerts-container"></div>
 
         <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion('ocr')">
+                <div class="icon">📄</div>
+                <span>Carregar Fatura (OCR)</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div class="accordion-content" id="ocrContent">
+                <div id="ocr-section">
+                    <h4>Analisar Fatura por Imagem</h4>
+                    <p>Faça o upload de uma imagem da sua conta de água ou tire uma foto.</p>
+                    <input type="file" id="ocr-upload" accept="image/*" capture="camera" style="display: none;">
+                    <button class="btn info" onclick="document.getElementById('ocr-upload').click()">Tirar Foto ou Escolher Arquivo</button>
+                    <img id="ocr-preview" src="#" alt="Pré-visualização da fatura">
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion('companyInfo')">
                 <div class="icon">🏢</div>
                 <span>Informações da Concessionária</span>
@@ -322,15 +391,15 @@
                 <div class="form-section">
                     <div class="input-group">
                         <label for="company-nome">Nome da Concessionária</label>
-                        <input type="text" id="company-nome" value="ÁGUAS DE MANAUS S/A">
+                        <input type="text" id="company-nome">
                     </div>
                     <div class="input-group">
                         <label for="company-endereco">Endereço</label>
-                        <input type="text" id="company-endereco" value="RUA DO BOMBEAMENTO, 01, COMPENSA">
+                        <input type="text" id="company-endereco">
                     </div>
                     <div class="input-group">
                         <label for="company-cnpj">CNPJ</label>
-                        <input type="text" id="company-cnpj" value="03.764.977/0001-27">
+                        <input type="text" id="company-cnpj">
                     </div>
                     <div class="btn-group">
                         <button class="btn secondary" onclick="clearFields('company')">Limpar</button>
@@ -351,15 +420,15 @@
                 <div class="form-section">
                     <div class="input-group">
                         <label for="client-nome">Nome Completo</label>
-                        <input type="text" id="client-nome" value="ARNOLD SOUZA DE LIMA">
+                        <input type="text" id="client-nome">
                     </div>
                     <div class="input-group">
                         <label for="client-matricula">Matrícula</label>
-                        <input type="text" id="client-matricula" value="4239385-0">
+                        <input type="text" id="client-matricula">
                     </div>
                     <div class="input-group">
                         <label for="client-endereco">Endereço Completo</label>
-                        <textarea id="client-endereco" rows="3">RUA DIVINOPOLIS - 50, TERRA NOVA - LOT. RIO PIORINI - MANAUS</textarea>
+                        <textarea id="client-endereco" rows="3"></textarea>
                     </div>
                     <div class="btn-group">
                         <button class="btn secondary" onclick="clearFields('client')">Limpar</button>
@@ -393,8 +462,7 @@
                                     <th>Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="daily-readings-table">
-                                </tbody>
+                            <tbody id="daily-readings-table"></tbody>
                         </table>
                     </div>
                     <div class="btn-group" style="margin-top: 10px;">
@@ -415,8 +483,7 @@
                                     <th>Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="monthly-readings-table">
-                                </tbody>
+                            <tbody id="monthly-readings-table"></tbody>
                         </table>
                     </div>
                 </div>
@@ -434,15 +501,15 @@
                 <div class="form-section">
                     <div class="input-group">
                         <label for="valor-agua">Valor da Água (R$)</label>
-                        <input type="number" id="valor-agua" value="250.59">
+                        <input type="number" id="valor-agua" step="0.01">
                     </div>
                     <div class="input-group">
                         <label for="juros">Juros (R$)</label>
-                        <input type="number" id="juros" value="4.63">
+                        <input type="number" id="juros" step="0.01">
                     </div>
                     <div class="input-group">
                         <label for="total-pagar">Total a Pagar (R$)</label>
-                        <input type="number" id="total-pagar" value="770.95">
+                        <input type="number" id="total-pagar" step="0.01">
                     </div>
                     <div class="btn-group">
                         <button class="btn secondary" onclick="clearFields('billing')">Limpar</button>
@@ -463,8 +530,13 @@
                     <h4>Resumo do Consumo</h4>
                     <div class="data-display" id="consumption-analysis"></div>
                 </div>
-                
-                <div class="analysis-card">
+
+                <div class="recommendation-card" id="recommendation-card">
+                    <h4>Recomendações da IA</h4>
+                    <div id="recommendations-list"></div>
+                </div>
+
+                <div class="analysis-card" style="margin-top: 20px;">
                     <h4>Histórico Mensal</h4>
                     <div class="reading-table-container">
                         <table class="reading-table">
@@ -475,25 +547,35 @@
                                     <th>Valor (R$)</th>
                                 </tr>
                             </thead>
-                            <tbody id="history-table">
-                                </tbody>
+                            <tbody id="history-table"></tbody>
                         </table>
                     </div>
+                </div>
+
+                <div class="analysis-card" style="margin-top: 20px;">
+                    <h4>Gráfico de Consumo</h4>
+                    <div class="chart-container">
+                        <canvas id="consumptionChart"></canvas>
+                    </div>
+                </div>
+                <div class="btn-group center">
+                    <button class="btn primary" onclick="updateDisplay()">Atualizar Gráficos e Análise</button>
                 </div>
             </div>
         </div>
 
-        <div class="btn-group" style="justify-content: center; margin-top: 30px;">
+        <div class="btn-group center" style="margin-top: 30px;">
             <button class="btn info" onclick="generatePDF()">Gerar Relatório em PDF</button>
             <button class="btn info" onclick="exportData()">Exportar Dados</button>
             <button class="btn danger" onclick="resetSystem()">Limpar Tudo</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script>
-        // Dados iniciais e dinâmicos do sistema
         let data = {
             companyInfo: {
                 nome: "ÁGUAS DE MANAUS S/A",
@@ -503,7 +585,7 @@
             clientInfo: {
                 nome: "ARNOLD SOUZA DE LIMA",
                 matricula: "4239385-0",
-                endereco: "RUA DIVINOPOLIS - 50, TERRA NOVA - LOT. RIO PIORINI - MANAUS"
+                endereco: "RUA DIVINOPOLIS - 50, TERRA NOVA - LOT. RIO PIORINI, MANAUS"
             },
             readings: {
                 leituraAnterior: 994,
@@ -530,7 +612,21 @@
             ]
         };
 
-        // Funções de exibição e atualização
+        let consumptionChart;
+
+        function loadData() {
+            const savedData = localStorage.getItem('aquaiaData');
+            if (savedData) {
+                data = JSON.parse(savedData);
+                showAlert('info', 'Dados carregados com sucesso do armazenamento local.');
+            }
+            updateDisplay();
+        }
+
+        function saveData() {
+            localStorage.setItem('aquaiaData', JSON.stringify(data));
+        }
+
         function updateDisplay() {
             displayCompanyInfo();
             displayClientInfo();
@@ -540,91 +636,181 @@
             displayDailyReadingsTable();
             displayMonthlyReadingsTable();
             displayConsumptionHistoryTable();
+            checkAndDisplayRecommendations();
+            createConsumptionChart();
         }
 
         function displayCompanyInfo() {
             const display = document.getElementById('company-info-display');
-            display.innerHTML = `
-                <div class="data-item"><span class="data-label">Concessionária:</span> <span class="data-value">${data.companyInfo.nome}</span></div>
-                <div class="data-item"><span class="data-label">Endereço:</span> <span class="data-value">${data.companyInfo.endereco}</span></div>
-                <div class="data-item"><span class="data-label">CNPJ:</span> <span class="data-value">${data.companyInfo.cnpj}</span></div>
-            `;
+            if (data.companyInfo.nome) {
+                display.innerHTML = `
+                    <div class="data-item"><span class="data-label">Concessionária:</span> <span class="data-value">${data.companyInfo.nome}</span></div>
+                    <div class="data-item"><span class="data-label">Endereço:</span> <span class="data-value">${data.companyInfo.endereco}</span></div>
+                    <div class="data-item"><span class="data-label">CNPJ:</span> <span class="data-value">${data.companyInfo.cnpj}</span></div>
+                `;
+            } else {
+                display.innerHTML = '<div class="empty-state">Nenhuma informação de concessionária salva.</div>';
+            }
+            document.getElementById('company-nome').value = data.companyInfo.nome;
+            document.getElementById('company-endereco').value = data.companyInfo.endereco;
+            document.getElementById('company-cnpj').value = data.companyInfo.cnpj;
         }
         
         function saveCompanyInfo() {
             data.companyInfo.nome = document.getElementById('company-nome').value;
             data.companyInfo.endereco = document.getElementById('company-endereco').value;
             data.companyInfo.cnpj = document.getElementById('company-cnpj').value;
+            saveData();
             updateDisplay();
             showAlert('success', 'Informações da Concessionária salvas com sucesso!');
         }
 
         function displayClientInfo() {
             const display = document.getElementById('client-info-display');
-            display.innerHTML = `
-                <div class="data-item"><span class="data-label">Nome:</span> <span class="data-value">${data.clientInfo.nome}</span></div>
-                <div class="data-item"><span class="data-label">Matrícula:</span> <span class="data-value">${data.clientInfo.matricula}</span></div>
-                <div class="data-item"><span class="data-label">Endereço:</span> <span class="data-value">${data.clientInfo.endereco}</span></div>
-            `;
+            if (data.clientInfo.nome) {
+                 display.innerHTML = `
+                    <div class="data-item"><span class="data-label">Nome:</span> <span class="data-value">${data.clientInfo.nome}</span></div>
+                    <div class="data-item"><span class="data-label">Matrícula:</span> <span class="data-value">${data.clientInfo.matricula}</span></div>
+                    <div class="data-item"><span class="data-label">Endereço:</span> <span class="data-value">${data.clientInfo.endereco}</span></div>
+                `;
+            } else {
+                display.innerHTML = '<div class="empty-state">Nenhum dado do cliente salvo.</div>';
+            }
+            document.getElementById('client-nome').value = data.clientInfo.nome;
+            document.getElementById('client-matricula').value = data.clientInfo.matricula;
+            document.getElementById('client-endereco').value = data.clientInfo.endereco;
         }
 
         function saveClientInfo() {
             data.clientInfo.nome = document.getElementById('client-nome').value;
             data.clientInfo.matricula = document.getElementById('client-matricula').value;
             data.clientInfo.endereco = document.getElementById('client-endereco').value;
+            saveData();
             updateDisplay();
             showAlert('success', 'Dados do Cliente salvos com sucesso!');
         }
 
         function displayReadings() {
             const display = document.getElementById('readings-display');
-            const consumo = data.readings.leituraAtual - data.readings.leituraAnterior;
-            display.innerHTML = `
-                <div class="data-item"><span class="data-label">Leitura Anterior:</span> <span class="data-value">${data.readings.leituraAnterior} m³</span></div>
-                <div class="data-item"><span class="data-label">Leitura Atual:</span> <span class="data-value">${data.readings.leituraAtual} m³</span></div>
-                <div class="data-item"><span class="data-label">Consumo do Mês:</span> <span class="data-value">${consumo} m³</span></div>
-            `;
+            if (data.readings.leituraAtual && data.readings.leituraAnterior) {
+                const consumo = data.readings.leituraAtual - data.readings.leituraAnterior;
+                display.innerHTML = `
+                    <div class="data-item"><span class="data-label">Leitura Anterior:</span> <span class="data-value">${data.readings.leituraAnterior} m³</span></div>
+                    <div class="data-item"><span class="data-label">Leitura Atual:</span> <span class="data-value">${data.readings.leituraAtual} m³</span></div>
+                    <div class="data-item"><span class="data-label">Consumo do Mês:</span> <span class="data-value">${consumo} m³</span></div>
+                `;
+            } else {
+                display.innerHTML = '<div class="empty-state">Nenhum dado de leitura mensal salvo.</div>';
+            }
         }
         
         function displayBilling() {
             const display = document.getElementById('billing-display');
-            display.innerHTML = `
-                <div class="data-item"><span class="data-label">Valor da Água:</span> <span class="data-value">R$ ${data.billing.valorAgua.toFixed(2)}</span></div>
-                <div class="data-item"><span class="data-label">Juros:</span> <span class="data-value">R$ ${data.billing.juros.toFixed(2)}</span></div>
-                <div class="data-item"><span class="data-label">Total a Pagar:</span> <span class="data-value">R$ ${data.billing.totalPagar.toFixed(2)}</span></div>
-            `;
+            if (data.billing.totalPagar) {
+                display.innerHTML = `
+                    <div class="data-item"><span class="data-label">Valor da Água:</span> <span class="data-value">R$ ${data.billing.valorAgua.toFixed(2)}</span></div>
+                    <div class="data-item"><span class="data-label">Juros:</span> <span class="data-value">R$ ${data.billing.juros.toFixed(2)}</span></div>
+                    <div class="data-item"><span class="data-label">Total a Pagar:</span> <span class="data-value">R$ ${data.billing.totalPagar.toFixed(2)}</span></div>
+                `;
+            } else {
+                display.innerHTML = '<div class="empty-state">Nenhum dado de valores salvo.</div>';
+            }
+            document.getElementById('valor-agua').value = data.billing.valorAgua;
+            document.getElementById('juros').value = data.billing.juros;
+            document.getElementById('total-pagar').value = data.billing.totalPagar;
         }
 
         function saveBillingInfo() {
-            data.billing.valorAgua = parseFloat(document.getElementById('valor-agua').value);
-            data.billing.juros = parseFloat(document.getElementById('juros').value);
-            data.billing.totalPagar = parseFloat(document.getElementById('total-pagar').value);
+            data.billing.valorAgua = parseFloat(document.getElementById('valor-agua').value) || 0;
+            data.billing.juros = parseFloat(document.getElementById('juros').value) || 0;
+            data.billing.totalPagar = parseFloat(document.getElementById('total-pagar').value) || 0;
+            saveData();
             updateDisplay();
             showAlert('success', 'Discriminação de valores salva com sucesso!');
         }
 
         function displayAnalysis() {
             const display = document.getElementById('consumption-analysis');
+            if (data.consumptionHistory.length === 0) {
+                display.innerHTML = '<div class="empty-state">Adicione dados de consumo para ver a análise.</div>';
+                return;
+            }
+
             const consumo = data.readings.leituraAtual - data.readings.leituraAnterior;
             const avgConsumption = data.consumptionHistory.reduce((sum, item) => sum + item.consumo, 0) / data.consumptionHistory.length;
-            const trend = consumo > avgConsumption ? 'acima da média' : 'abaixo da média';
-            const status = consumo > avgConsumption + 10 ? 'alto' : 'normal';
-
+            const percentageChange = avgConsumption > 0 ? ((consumo - avgConsumption) / avgConsumption) * 100 : 0;
+            
+            let status, alertType;
+            if (consumo > avgConsumption * 1.2) {
+                status = 'muito alto';
+                alertType = 'danger';
+            } else if (consumo > avgConsumption * 1.05) {
+                status = 'acima da média';
+                alertType = 'warning';
+            } else if (consumo < avgConsumption * 0.95) {
+                status = 'abaixo da média';
+                alertType = 'success';
+            } else {
+                status = 'dentro da média';
+                alertType = 'info';
+            }
+            
             display.innerHTML = `
                 <p>O consumo deste mês foi de <strong>${consumo} m³</strong>.</p>
-                <p>Isso é <strong>${trend}</strong> (${Math.abs(consumo - avgConsumption).toFixed(1)} m³) em comparação com a média histórica de ${avgConsumption.toFixed(1)} m³.</p>
-                <p><strong>Status:</strong> <span style="color:${status === 'alto' ? 'red' : 'green'};">${status.toUpperCase()}</span></p>
+                <p>A média histórica é de <strong>${avgConsumption.toFixed(1)} m³</strong>.</p>
+                <p>Isso é <strong>${Math.abs(percentageChange).toFixed(1)}%</strong> ${status} em comparação com a média histórica.</p>
+                <div class="alert alert-${alertType}">
+                    ${status === 'muito alto' ? '🚨 Atenção: Consumo anômalo detectado! Verifique possíveis vazamentos.' :
+                       status === 'acima da média' ? '⚠️ O consumo está um pouco acima do seu padrão. Fique atento!' :
+                       status === 'abaixo da média' ? '✅ Ótimo trabalho! Seu consumo está eficiente.' :
+                       'ℹ️ Seu consumo está dentro da média esperada.'}
+                </div>
             `;
+        }
+
+        function checkAndDisplayRecommendations() {
+            const consumption = data.readings.leituraAtual - data.readings.leituraAnterior;
+            const recommendationCard = document.getElementById('recommendation-card');
+            const recommendationsList = document.getElementById('recommendations-list');
+            recommendationsList.innerHTML = '';
+            
+            const tips = [
+                "Feche a torneira ao escovar os dentes e fazer a barba. Uma torneira aberta gasta até 12 litros por minuto!",
+                "Reduza o tempo do banho. Um banho de 5 minutos pode economizar até 100 litros de água.",
+                "Conserte vazamentos em torneiras e vasos sanitários. Um gotejamento constante pode desperdiçar 45 litros de água por dia.",
+                "Use a máquina de lavar louça e a de lavar roupa com a carga máxima. Isso reduz o número de ciclos e economiza água e energia.",
+                "Não use a mangueira para limpar calçadas e pátios. Use uma vassoura para varrer a sujeira e a poeira."
+            ];
+
+            if (consumption > 35) {
+                recommendationCard.style.display = 'block';
+                recommendationsList.innerHTML += `<div class="recommendation-item"><h4>Seu consumo está alto. Considere:</h4></div>`;
+                tips.forEach(tip => {
+                    recommendationsList.innerHTML += `<div class="recommendation-item">💡 ${tip}</div>`;
+                });
+            } else if (consumption > 25) {
+                recommendationCard.style.display = 'block';
+                recommendationsList.innerHTML += `<div class="recommendation-item"><h4>Seu consumo é moderado. Pequenas ações podem ajudar a economizar:</h4></div>`;
+                recommendationsList.innerHTML += `<div class="recommendation-item">💡 ${tips[0]}</div>`;
+                recommendationsList.innerHTML += `<div class="recommendation-item">💡 ${tips[1]}</div>`;
+                recommendationsList.innerHTML += `<div class="recommendation-item">💡 ${tips[2]}</div>`;
+            } else {
+                recommendationCard.style.display = 'none';
+            }
         }
         
         function displayDailyReadingsTable() {
             const tbody = document.getElementById('daily-readings-table');
             tbody.innerHTML = '';
+            if (data.dailyReadings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Nenhuma leitura diária salva.</td></tr>';
+                return;
+            }
             data.dailyReadings.forEach((reading, index) => {
                 const row = `
                     <tr>
                         <td>${reading.date}</td>
-                        <td>${reading.reading}</td>
+                        <td>${reading.reading} m³</td>
                         <td><button class="btn danger" onclick="removeDailyReading(${index})">Remover</button></td>
                     </tr>
                 `;
@@ -635,13 +821,18 @@
         function displayMonthlyReadingsTable() {
             const tbody = document.getElementById('monthly-readings-table');
             tbody.innerHTML = '';
+            if (data.monthlyReadings.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhuma leitura mensal salva.</td></tr>';
+                return;
+            }
             data.monthlyReadings.forEach((reading, index) => {
-                const consumo = index > 0 ? reading.reading - data.monthlyReadings[index + 1].reading : '-';
+                const previousReading = data.monthlyReadings[index + 1] ? data.monthlyReadings[index + 1].reading : data.readings.leituraAnterior;
+                const consumo = reading.reading - previousReading;
                 const row = `
                     <tr>
                         <td>${reading.date}</td>
-                        <td>${reading.reading}</td>
-                        <td>${consumo}</td>
+                        <td>${reading.reading} m³</td>
+                        <td>${consumo > 0 ? consumo : '-'} m³</td>
                         <td><button class="btn danger" onclick="removeMonthlyReading(${index})">Remover</button></td>
                     </tr>
                 `;
@@ -652,6 +843,10 @@
         function displayConsumptionHistoryTable() {
             const tbody = document.getElementById('history-table');
             tbody.innerHTML = '';
+            if (data.consumptionHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Nenhum histórico de consumo salvo.</td></tr>';
+                return;
+            }
             data.consumptionHistory.forEach(item => {
                 const row = `
                     <tr>
@@ -664,20 +859,21 @@
             });
         }
 
-        // Funções de controle
         function toggleAccordion(sectionId) {
             const content = document.getElementById(sectionId + 'Content');
             const header = content.previousElementSibling;
-            const arrow = header.querySelector('.arrow');
             
+            document.querySelectorAll('.accordion-content').forEach(item => {
+                if (item.id !== content.id) {
+                    item.style.display = 'none';
+                    item.previousElementSibling.classList.remove('active');
+                }
+            });
+
             if (content.style.display === "flex") {
                 content.style.display = "none";
                 header.classList.remove('active');
             } else {
-                // Fechar todos os outros acordeões
-                document.querySelectorAll('.accordion-content').forEach(item => item.style.display = 'none');
-                document.querySelectorAll('.accordion-header').forEach(item => item.classList.remove('active'));
-
                 content.style.display = "flex";
                 header.classList.add('active');
             }
@@ -688,39 +884,63 @@
                 document.getElementById('company-nome').value = '';
                 document.getElementById('company-endereco').value = '';
                 document.getElementById('company-cnpj').value = '';
+                data.companyInfo = { nome: "", endereco: "", cnpj: "" };
             } else if (section === 'client') {
                 document.getElementById('client-nome').value = '';
                 document.getElementById('client-matricula').value = '';
                 document.getElementById('client-endereco').value = '';
+                data.clientInfo = { nome: "", matricula: "", endereco: "" };
             } else if (section === 'billing') {
                 document.getElementById('valor-agua').value = '';
                 document.getElementById('juros').value = '';
                 document.getElementById('total-pagar').value = '';
+                data.billing = { valorAgua: 0, juros: 0, totalPagar: 0 };
             }
+            saveData();
+            updateDisplay();
         }
 
         function addDailyReading() {
             const input = document.getElementById('daily-reading-input');
             const reading = parseInt(input.value);
-            if (reading && !isNaN(reading)) {
-                const today = new Date().toLocaleDateString('pt-BR');
-                data.dailyReadings.push({ date: today, reading: reading });
-                input.value = '';
-                displayDailyReadingsTable();
-                showAlert('success', 'Leitura diária salva!');
-            } else {
+            if (!reading || isNaN(reading)) {
                 showAlert('danger', 'Por favor, insira uma leitura válida.');
+                return;
             }
+            
+            let previousReading = data.readings.leituraAtual;
+            if (data.dailyReadings.length > 0) {
+                 previousReading = data.dailyReadings[data.dailyReadings.length - 1].reading;
+            }
+
+            if (reading < previousReading) {
+                showAlert('danger', 'Erro: A leitura atual não pode ser menor que a anterior.');
+                return;
+            }
+            
+            const dailyConsumption = reading - previousReading;
+            if (dailyConsumption > 2 && data.dailyReadings.length > 0) {
+                showAlert('warning', `⚠️ Consumo diário elevado (${dailyConsumption} m³). Fique atento, pode ser um vazamento!`);
+            }
+
+            const today = new Date().toLocaleDateString('pt-BR');
+            data.dailyReadings.push({ date: today, reading: reading });
+            input.value = '';
+            saveData();
+            displayDailyReadingsTable();
+            showAlert('success', 'Leitura diária salva!');
         }
         
         function removeDailyReading(index) {
             data.dailyReadings.splice(index, 1);
+            saveData();
             displayDailyReadingsTable();
             showAlert('info', 'Leitura diária removida.');
         }
 
         function clearDailyReadings() {
             data.dailyReadings = [];
+            saveData();
             displayDailyReadingsTable();
             showAlert('warning', 'Leituras diárias limpas.');
         }
@@ -734,18 +954,16 @@
             const today = new Date();
             const monthYear = `${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
             
-            const existingIndex = data.monthlyReadings.findIndex(r => r.date === monthYear);
-            if (existingIndex !== -1) {
-                data.monthlyReadings[existingIndex].reading = lastReading;
+            const existingMonthlyIndex = data.monthlyReadings.findIndex(r => r.date === monthYear);
+            if (existingMonthlyIndex !== -1) {
+                data.monthlyReadings[existingMonthlyIndex].reading = lastReading;
             } else {
                 data.monthlyReadings.unshift({ date: monthYear, reading: lastReading });
             }
             
-            data.readings.leituraAtual = lastReading;
-            
-            // Simular atualização do histórico
-            const consumo = data.readings.leituraAtual - data.readings.leituraAnterior;
+            const consumo = lastReading - data.readings.leituraAnterior;
             const valor = data.billing.totalPagar;
+            
             const historyIndex = data.consumptionHistory.findIndex(h => h.mes === monthYear);
             if(historyIndex !== -1) {
                  data.consumptionHistory[historyIndex] = { mes: monthYear, consumo: consumo, valor: valor };
@@ -753,16 +971,18 @@
                 data.consumptionHistory.unshift({ mes: monthYear, consumo: consumo, valor: valor });
             }
 
-            // Atualizar leitura anterior para a próxima fatura
-            data.readings.leituraAnterior = lastReading;
+            data.readings.leituraAnterior = data.readings.leituraAtual;
+            data.readings.leituraAtual = lastReading;
             
             clearDailyReadings();
+            saveData();
             updateDisplay();
             showAlert('success', 'Leitura mensal salva e histórico atualizado!');
         }
         
         function removeMonthlyReading(index) {
             data.monthlyReadings.splice(index, 1);
+            saveData();
             displayMonthlyReadingsTable();
             showAlert('info', 'Leitura mensal removida.');
         }
@@ -778,6 +998,7 @@
                     monthlyReadings: [],
                     consumptionHistory: []
                 };
+                saveData();
                 updateDisplay();
                 showAlert('danger', 'Todos os dados foram limpos.');
             }
@@ -844,7 +1065,6 @@
             doc.text(`Total a Pagar: R$ ${data.billing.totalPagar.toFixed(2)}`, margin, y);
             y += lineHeight * 2;
             
-            // Tabela de histórico de consumo
             doc.setFontSize(14);
             doc.text("Histórico de Consumo", margin, y);
             y += lineHeight;
@@ -886,8 +1106,189 @@
             setTimeout(() => alertDiv.remove(), 5000);
         }
 
+        // OCR com Tesseract.js
+        document.getElementById('ocr-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('ocr-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    processOCR(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function processOCR(imageFile) {
+            showAlert('info', '🤖 Analisando a imagem com Tesseract.js...');
+            try {
+                const { data: { text } } = await Tesseract.recognize(
+                    imageFile,
+                    'por',
+                    { logger: m => console.log(m) } // Opcional: para ver o progresso no console
+                );
+                
+                const extractedData = parseOCRText(text);
+                
+                if (extractedData.leituraAnterior && extractedData.leituraAtual) {
+                    data.readings.leituraAnterior = extractedData.leituraAnterior;
+                    data.readings.leituraAtual = extractedData.leituraAtual;
+                }
+                
+                if (extractedData.valorAgua) {
+                    data.billing.valorAgua = extractedData.valorAgua;
+                    document.getElementById('valor-agua').value = data.billing.valorAgua;
+                }
+                if (extractedData.totalPagar) {
+                    data.billing.totalPagar = extractedData.totalPagar;
+                    document.getElementById('total-pagar').value = data.billing.totalPagar;
+                }
+
+                saveData();
+                updateDisplay();
+                showAlert('success', '✅ Dados da fatura preenchidos automaticamente com sucesso!');
+
+            } catch (error) {
+                console.error('OCR Error:', error);
+                showAlert('danger', '❌ Erro ao processar a imagem. Tente uma imagem mais clara.');
+            }
+        }
+
+        function parseOCRText(text) {
+            const result = {};
+            const lines = text.split('\n');
+
+            // Regex para valores de consumo (números inteiros de 3-4 dígitos)
+            const leituraRegex = /(?:LEITURA|CONSUMO)\s*(?:ATUAL|ANTERIOR)?\s*(\d{3,4})\s*M3/i;
+            const leiturasEncontradas = text.matchAll(leituraRegex);
+            const leituras = [...leiturasEncontradas].map(m => parseInt(m[1]));
+            if (leituras.length >= 2) {
+                // Assume que o primeiro é a leitura atual e o segundo a anterior
+                result.leituraAtual = leituras[0];
+                result.leituraAnterior = leituras[1];
+            }
+
+            // Regex para valores em R$
+            const valorAguaRegex = /VALOR DO AGUA\s*R\$?\s*(\d+,\d{2})/i;
+            const totalPagarRegex = /TOTAL A PAGAR\s*R\$?\s*(\d+,\d{2})/i;
+
+            const valorAguaMatch = text.match(valorAguaRegex);
+            const totalPagarMatch = text.match(totalPagarRegex);
+
+            if (valorAguaMatch && valorAguaMatch[1]) {
+                result.valorAgua = parseFloat(valorAguaMatch[1].replace(',', '.'));
+            }
+            if (totalPagarMatch && totalPagarMatch[1]) {
+                result.totalPagar = parseFloat(totalPagarMatch[1].replace(',', '.'));
+            }
+
+            return result;
+        }
+
+        function createConsumptionChart() {
+            const ctx = document.getElementById('consumptionChart').getContext('2d');
+            
+            const reversedHistory = [...data.consumptionHistory].reverse();
+            const avgConsumption = data.consumptionHistory.length > 0 ? data.consumptionHistory.reduce((sum, item) => sum + item.consumo, 0) / data.consumptionHistory.length : 0;
+
+            const labels = reversedHistory.map(item => item.mes);
+            const consumoData = reversedHistory.map(item => item.consumo);
+            const valorData = reversedHistory.map(item => item.valor);
+            const avgData = reversedHistory.map(() => avgConsumption.toFixed(1));
+
+            if (consumptionChart) {
+                consumptionChart.destroy();
+            }
+
+            consumptionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Consumo (m³)',
+                            data: consumoData,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: 'Valor (R$)',
+                            data: valorData,
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        },
+                        {
+                            label: 'Média Histórica',
+                            data: avgData,
+                            borderColor: '#e74c3c',
+                            borderDash: [5, 5],
+                            pointStyle: false,
+                            fill: false,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Consumo (m³)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Valor (R$)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.dataset.label.includes('Consumo')) {
+                                            label += context.parsed.y + ' m³';
+                                        } else if (context.dataset.label.includes('Valor')) {
+                                            label += 'R$ ' + context.parsed.y.toFixed(2);
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         // Inicialização
-        document.addEventListener('DOMContentLoaded', updateDisplay);
+        document.addEventListener('DOMContentLoaded', loadData);
 
     </script>
 </body>
